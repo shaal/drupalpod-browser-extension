@@ -1,40 +1,45 @@
-<!DOCTYPE html>
-<html>
-<head>
-      <meta charset="UTF-8">
-      <meta http-equiv="X-UA-Compatible" content="IE=edge">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>DrupalPod</title>
-      <script src="scripts/popup.js"></script>
-      <link rel="stylesheet" type="text/css" href="css/popup.css">
-</head>
-<body>
+<style scoped>
+.logo {
+  float: right;
+  padding-left: 2em;
+}
+</style>
+
+<script lang="ts">
+export default {
+  errorMessages: [
+    'Something went wrong, please report the error',
+    'Open an issue page on Drupal.org to see the available options',
+    'Please click on the "Create issue fork" green button on this issue page.',
+    'Please click on the "Get push access" green button on this issue page.',
+    'Please log in to Drupal.org',
+  ],
+  data(): any {
+    return { errors: [] };
+  },
+};
+</script>
+
+<template>
   <div class="container">
-    <div class="page-header">
-      <h2>DrupalPod <img class="logo" src="icons/DrupalPod-128.png" alt="DrupalPod Logo"></h2>
+    <header class="page-header">
+      <h2>
+        DrupalPod
+        <img class="logo" src="./assets/DrupalPod-128.png" alt="DrupalPod Logo" role="presentation">
+      </h2>
       <p class="reading-page-status">
         Please wait...
       </p>
-    </div>
+    </header>
 
-    <div class="warnings" role="alert">
-      <p class="something-went-wrong-instructions hidden">
-        Something went wrong, please report the error
+    <aside v-if="errors && errors.length > 0" class="warnings" role="alert">
+      <p v-for="(error, index) in errors" :key="index">
+        {{ error }}
       </p>
-      <p class="not-issue-page-instructions hidden">
-        Open an issue page on Drupal.org to see the available options
-      </p>
-      <p class="no-issue-fork-instructions hidden">
-        Please click on the "Create issue fork" green button on this issue page.
-      </p>
-      <p class="no-push-access-instructions hidden">
-        Please click on the "Get push access" green button on this issue page.
-      </p>
-      <p class="not-logged-in-instructions hidden">
-        Please log in to Drupal.org
-      </p>
-    </div>
+    </aside>
+
     <hr>
+
     <form class="form-selection hidden" id="form-selection" aria-live="polite">
       <p class="hidden"><strong>DrupalPod repo: <span id="devdrupalpod"></span></strong></p>
       <p><strong>Project name: <span id="project-name"></span></strong></p>
@@ -61,7 +66,6 @@
       <br>
       <br>
       <button id="submit" type="submit"><h2>Open Dev Env</h2></button>
-    <form/>
+    </form>
   </div>
-</body>
-</html>
+</template>
