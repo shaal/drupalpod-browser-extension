@@ -1,3 +1,3 @@
 # DrupalPod
 
-Browser extension that help setup a full Drupal development environment according to Drupal issue pages.
+Browser extension that helps set up a full Drupal development environment from Drupal issue pages.
