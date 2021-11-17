@@ -3,12 +3,21 @@
   float: right;
   padding-left: 2em;
 }
+.warnings {
+  color: red;
+}
 </style>
 
 <script lang="ts">
-import { getDrupalPodRepo, parseDrupalOrgTab, openDevEnv } from '@/popup';
+import { defineComponent } from 'vue';
+import { getDrupalPodRepo, parseDrupalOrgTab } from '@/popup';
 
-export default {
+export interface AppData {
+  errors: string[];
+  loaded: boolean;
+}
+
+export default defineComponent({
   errorMessages: [
     'Something went wrong, please report the error',
     'Open an issue page on Drupal.org to see the available options',
@@ -16,8 +25,8 @@ export default {
     'Please click on the "Get push access" green button on this issue page.',
     'Please log in to Drupal.org',
   ],
-  data(): any {
-    return { errors: [] };
+  data(): AppData {
+    return { errors: [], loaded: false };
   },
   mounted(): void {
     document.addEventListener('DOMContentLoaded', (): void => {
@@ -25,23 +34,22 @@ export default {
 
       parseDrupalOrgTab()
         .then(() => {
-          console.log('drupal.org');
+          // Hide 'please wait' message.
+          this.loaded = true;
+
+          // Activate button.
+          const button = document.getElementById('submit') as HTMLElement;
+          button.addEventListener('click', () => {
+            console.log('openDevEnv()');
+          });
         })
         .catch((errorMessage: string) => {
-          console.error(errorMessage);
-          // Hide 'please wait' message.
-          const pageStatusElement = document.querySelector('.reading-page-status') as HTMLElement;
-          pageStatusElement.classList.add('hidden');
+          this.loaded = true;
+          this.errors = [errorMessage];
         });
-
-      // Activate button.
-      const button = document.getElementById('submit') as HTMLElement;
-      button.addEventListener('click', () => {
-        console.log('openDevEnv()');
-      });
     });
   },
-};
+});
 </script>
 
 <template>
@@ -51,7 +59,7 @@ export default {
         DrupalPod
         <img class="logo" src="./assets/DrupalPod-128.png" alt="DrupalPod Logo" role="presentation">
       </h2>
-      <p class="reading-page-status">
+      <p v-if="!loaded" class="reading-page-status">
         Please wait...
       </p>
     </header>
