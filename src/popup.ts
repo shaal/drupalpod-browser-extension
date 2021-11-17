@@ -126,7 +126,17 @@ export const populateIssueFork = (pageResults: IssueMetadata): any => {
   formSelectionElement.classList.remove('hidden');
 };
 
-export const openDevEnv = (envRepo: string, projectName: string, issueFork: string, issueBranch: string, projectType: string, moduleVersion: string, coreVersion: string, patchFile: string, installProfile: string): void => {
+export const openDevEnv = (
+  envRepo: string,
+  projectName: string,
+  issueFork: string,
+  issueBranch: string,
+  projectType: string,
+  moduleVersion: string,
+  coreVersion: string,
+  patchFile: string,
+  installProfile: string,
+): void => {
   // Build URL structure to open Gitpod.
   const url = `https://gitpod.io/#${projectName},${issueFork},${issueBranch},${projectType},${moduleVersion},${coreVersion},${patchFile},${installProfile}/${envRepo}`;
   chrome.tabs.create({ url });
@@ -137,7 +147,7 @@ export const readIssueContent = (): void => {
   const inContent = (params: any): IssueMetadata => {
     const pathArray: string[] = window.location.pathname.split('/');
     const issueForkEl = document.querySelector('.fork-link') as HTMLElement;
-    const issueFork = issueForkEl?.innerText;
+    const issueFork = issueForkEl?.innerText || '';
     const allBranchesEl = document.querySelector('.branches') as HTMLElement;
     const allBranches: HTMLCollection = allBranchesEl?.children as HTMLCollectionOf<HTMLElement>;
 
