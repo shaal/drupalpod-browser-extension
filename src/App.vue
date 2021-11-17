@@ -6,6 +6,8 @@
 </style>
 
 <script lang="ts">
+import { getDrupalPodRepo, parseDrupalOrgTab, openDevEnv } from '@/popup';
+
 export default {
   errorMessages: [
     'Something went wrong, please report the error',
@@ -16,6 +18,28 @@ export default {
   ],
   data(): any {
     return { errors: [] };
+  },
+  mounted(): void {
+    document.addEventListener('DOMContentLoaded', (): void => {
+      getDrupalPodRepo();
+
+      parseDrupalOrgTab()
+        .then(() => {
+          console.log('drupal.org');
+        })
+        .catch((errorMessage: string) => {
+          console.error(errorMessage);
+          // Hide 'please wait' message.
+          const pageStatusElement = document.querySelector('.reading-page-status') as HTMLElement;
+          pageStatusElement.classList.add('hidden');
+        });
+
+      // Activate button.
+      const button = document.getElementById('submit') as HTMLElement;
+      button.addEventListener('click', () => {
+        console.log('openDevEnv()');
+      });
+    });
   },
 };
 </script>
