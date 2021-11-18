@@ -1,21 +1,5 @@
 import { IssueMetadata } from './models/issue-metadata';
 
-export const displayWarning = (className: string): void => {
-  // Reveal error message.
-  const warningMessageElement = document.querySelector(`.${className}`) as HTMLElement;
-  if (warningMessageElement) {
-    warningMessageElement.classList.remove('hidden');
-  }
-};
-
-export const getSelectValue = (id: string): string => {
-  const selectElement = document.getElementById(id) as HTMLSelectElement;
-  if (selectElement.options[selectElement.selectedIndex]) {
-    return selectElement.options[selectElement.selectedIndex].value;
-  }
-  return '';
-};
-
 export const getPatchesFromLinks = (linksArray: string[]): string[] => {
   const patchesRegex = /^https:\/\/www\.drupal\.org\/files\/issues\/.*\.patch$/;
   const patchesFound = linksArray.filter((item) => (patchesRegex.exec(item) !== null));
@@ -24,29 +8,13 @@ export const getPatchesFromLinks = (linksArray: string[]): string[] => {
   return patchesFound;
 };
 
-export const populateSelectList = (id: string, options: string[]): void => {
-  const select = document.getElementById(id) as HTMLSelectElement;
-  if (select) {
-    options.forEach((optionValue) => {
-      const opt = document.createElement('option') as HTMLOptionElement;
-      opt.value = optionValue;
-      opt.innerHTML = optionValue;
-      select.append(opt);
+export const getDrupalPodRepo = (): Promise<string> => (
+  new Promise((resolve) => {
+    chrome.runtime.sendMessage({ message: 'fetch-drupalpod-repo' }, (response) => {
+      resolve(response.message);
     });
-  } else {
-    throw new Error('Select element does not exist');
-  }
-};
-
-export const getDrupalPodRepo = (): void => {
-  chrome.runtime.sendMessage({ message: 'fetch-drupalpod-repo' }, (response) => {
-    // return response.message;
-    const drupalPodRepoStatus = document.getElementById('devdrupalpod') as HTMLElement;
-    if (drupalPodRepoStatus) {
-      drupalPodRepoStatus.innerText = response.message;
-    }
-  });
-};
+  })
+);
 
 export const isDrupalOrgUrl = (url: string): boolean => {
   // Run only on Drupal issues pages, otherwise display a message
@@ -57,7 +25,7 @@ export const isDrupalOrgUrl = (url: string): boolean => {
 };
 
 // Check current URL to activate extension only on relevant pages.
-export const parseDrupalOrgTab = (): Promise<boolean> => (
+export const parseDrupalOrgTab = async (): Promise<boolean> => (
   new Promise<boolean>((resolve, reject) => {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       const url: string = tabs[0].url || '';
@@ -79,54 +47,11 @@ export const getProjectType = async (projectName: string): Promise<string> => {
     return await (obj.list[0].type);
   } catch (e) {
     console.error(e);
-    return Promise.reject(e);
+    throw e;
   }
 };
 
-export const populateIssueFork = (pageResults: IssueMetadata): any => {
-  if (!pageResults.loggedIn) {
-    displayWarning('not-logged-in-instructions');
-  }
-
-  // Check if issue fork found in the page
-  if (!pageResults.issueFork) {
-    displayWarning('no-issue-fork-instructions');
-  }
-
-  if (!pageResults.pushAccess) {
-    displayWarning('no-push-access-instructions');
-  }
-
-  const projectName = pageResults.pathArray[2];
-  const projectNameStatus = document.getElementById('project-name') as HTMLElement;
-  projectNameStatus.innerHTML = projectName;
-
-  getProjectType(projectName).then((projectType) => {
-    const projectTypeStatus = document.getElementById('project-type') as HTMLElement;
-    projectTypeStatus.innerHTML = projectType;
-  });
-
-  const issueForkStatus = document.getElementById('issue-fork') as HTMLElement;
-  issueForkStatus.innerHTML = pageResults.issueFork || '';
-
-  const moduleVersionStatus = document.getElementById('module-version') as HTMLElement;
-  moduleVersionStatus.innerHTML = pageResults.moduleVersion;
-
-  const drupalCoreVersionsArray = ['9.2.0', '8.9.x', '9.0.x', '9.1.x', '9.2.x', '9.3.x'];
-  const drupalInstallProfiles = ['(none)', 'standard', 'demo_umami', 'minimal'];
-  const availablePatchesArray = getPatchesFromLinks(pageResults.allHrefs);
-
-  populateSelectList('issue-branch', pageResults.issueBranches);
-  populateSelectList('core-version', drupalCoreVersionsArray);
-  populateSelectList('install-profile', drupalInstallProfiles);
-  populateSelectList('available-patches', availablePatchesArray);
-
-  // Display form
-  const formSelectionElement = document.querySelector('.form-selection') as HTMLElement;
-  formSelectionElement.classList.remove('hidden');
-};
-
-export const openDevEnv = (
+export const openDevEnv = async (
   envRepo: string,
   projectName: string,
   issueFork: string,
@@ -136,14 +61,13 @@ export const openDevEnv = (
   coreVersion: string,
   patchFile: string,
   installProfile: string,
-): void => {
+): Promise<chrome.tabs.Tab> => {
   // Build URL structure to open Gitpod.
   const url = `https://gitpod.io/#${projectName},${issueFork},${issueBranch},${projectType},${moduleVersion},${coreVersion},${patchFile},${installProfile}/${envRepo}`;
-  chrome.tabs.create({ url });
-  window.close();
+  return chrome.tabs.create({ url });
 };
 
-export const readIssueContent = (): void => {
+export const readIssueContent = async (): Promise<IssueMetadata> => {
   const inContent = (params: any): IssueMetadata => {
     const pathArray: string[] = window.location.pathname.split('/');
     const issueForkEl = document.querySelector('.fork-link') as HTMLElement;
@@ -161,7 +85,7 @@ export const readIssueContent = (): void => {
       }
     }
     // Remove duplicate Hrefs.
-    const allHrefs: string[] = [...new Set(duplicateAllHrefs)];
+    const availablePatches = getPatchesFromLinks([...new Set(duplicateAllHrefs)]);
 
     const issueBranches = [];
     (Array.from(allBranches) as HTMLElement[]).forEach((element: HTMLElement) => {
@@ -179,7 +103,7 @@ export const readIssueContent = (): void => {
       success: true,
       pathArray,
       issueFork,
-      allHrefs,
+      availablePatches,
       issueBranches,
       moduleVersion,
       loggedIn,
@@ -187,19 +111,22 @@ export const readIssueContent = (): void => {
     };
   };
 
-  chrome.tabs.executeScript({
-    code: `(${inContent})(${JSON.stringify({ foo: 'bar' })})`,
-  }, ([result] = []) => {
-    // Hide 'please wait' message
-    const pageStatusElement = document.querySelector('.reading-page-status') as HTMLElement;
-    if (pageStatusElement) {
-      pageStatusElement.classList.add('hidden');
-    }
-    if (!chrome.runtime.lastError) {
-      populateIssueFork(result);
-    } else {
-      console.error(chrome.runtime.lastError);
-      displayWarning('something-went-wrong-instructions');
-    }
+  return new Promise((resolve, reject) => {
+    // Executes the inContent method in a IIFE inside the tab.
+    chrome.tabs.executeScript({
+      code: `(${inContent})(${JSON.stringify({ foo: 'bar' })})`,
+    }, ([result] = []) => {
+      // Hide 'please wait' message
+      const pageStatusElement = document.querySelector('.reading-page-status') as HTMLElement;
+      if (pageStatusElement) {
+        pageStatusElement.classList.add('hidden');
+      }
+      if (!chrome.runtime.lastError) {
+        resolve(result);
+      } else {
+        console.error(chrome.runtime.lastError);
+        reject(new Error('something-went-wrong-instructions'));
+      }
+    });
   });
 };

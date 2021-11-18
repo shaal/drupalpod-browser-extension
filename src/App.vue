@@ -10,41 +10,52 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue';
-import { getDrupalPodRepo, parseDrupalOrgTab } from '@/popup';
+import { parseDrupalOrgTab, readIssueContent } from '@/popup';
+import drupalpodForm from './drupalpod-form/drupalpod-form.vue';
+import { IssueMetadata } from './models/issue-metadata';
 
 export interface AppData {
   errors: string[];
   loaded: boolean;
+  issueMetadata?: IssueMetadata;
 }
 
 export default defineComponent({
+  components: { drupalpodForm },
   errorMessages: [
-    'Something went wrong, please report the error',
     'Open an issue page on Drupal.org to see the available options',
-    'Please click on the "Create issue fork" green button on this issue page.',
-    'Please click on the "Get push access" green button on this issue page.',
-    'Please log in to Drupal.org',
   ],
   data(): AppData {
-    return { errors: [], loaded: false };
+    return {
+      errors: [],
+      loaded: false,
+    };
   },
   mounted(): void {
     document.addEventListener('DOMContentLoaded', (): void => {
-      getDrupalPodRepo();
-
       parseDrupalOrgTab()
-        .then(() => {
+        .then(() => readIssueContent())
+        .then((metadata: IssueMetadata) => {
           // Hide 'please wait' message.
           this.loaded = true;
-
-          // Activate button.
-          const button = document.getElementById('submit') as HTMLElement;
-          button.addEventListener('click', () => {
-            console.log('openDevEnv()');
-          });
+          this.issueMetadata = metadata;
+          if (this.issueMetadata) {
+            if (!this.issueMetadata.loggedIn) {
+              this.errors.push('Please log in to Drupal.org');
+            }
+            if (!this.issueMetadata.pushAccess) {
+              this.errors.push('Please click on the "Get push access" green button on this issue page.');
+            }
+            if (this.issueMetadata.issueBranches.length === 0) {
+              this.errors.push('Please click on the "Create issue fork" green button on this issue page.');
+            }
+            if (!this.issueMetadata.success) {
+              this.errors.push('Something went wrong, please report the error');
+            }
+          }
         })
         .catch((errorMessage: string) => {
-          this.loaded = true;
+          this.loaded = false;
           this.errors = [errorMessage];
         });
     });
@@ -59,12 +70,12 @@ export default defineComponent({
         DrupalPod
         <img class="logo" src="./assets/DrupalPod-128.png" alt="DrupalPod Logo" role="presentation">
       </h2>
-      <p v-if="!loaded" class="reading-page-status">
+      <p v-if="!loaded && errors?.length > 0" class="reading-page-status">
         Please wait...
       </p>
     </header>
 
-    <aside v-if="errors && errors.length > 0" class="warnings" role="alert">
+    <aside v-if="errors?.length > 0" class="warnings" role="alert">
       <p v-for="(error, index) in errors" :key="index">
         {{ error }}
       </p>
@@ -72,32 +83,6 @@ export default defineComponent({
 
     <hr>
 
-    <form class="form-selection hidden" id="form-selection" aria-live="polite">
-      <p class="hidden"><strong>DrupalPod repo: <span id="devdrupalpod"></span></strong></p>
-      <p><strong>Project name: <span id="project-name"></span></strong></p>
-      <p><strong>Project type: <span id="project-type"></span></strong></p>
-      <p><strong>Module Version: <span id="module-version"></span></strong></p>
-      <p class="hidden"><strong>Repo: <span id="drupalpod-repo"></span></strong></p>
-      <p><strong>Issue fork: <span id="issue-fork"></span></strong></p>
-      <p>Select from the options below:</p>
-      <label for="issue-branch">Branch:</label>
-      <select name="issue-branch" id="issue-branch">
-      </select>
-      <br>
-      <label for="core-version">Drupal core version:</label>
-      <select name="core-version" id="core-version">
-      </select>
-      <br>
-      <label for="available-patches">Choose a patch:</label>
-      <select name="available-patches" id="available-patches">
-      </select>
-      <br>
-      <label for="install-profile">Install profile:</label>
-      <select name="install-profile" id="install-profile">
-      </select>
-      <br>
-      <br>
-      <button id="submit" type="submit"><h2>Open Dev Env</h2></button>
-    </form>
+    <drupalpod-form v-if="loaded" v-bind:issueMetadata="issueMetadata"></drupalpod-form>
   </div>
 </template>

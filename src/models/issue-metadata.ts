@@ -2,7 +2,7 @@ export interface IssueMetadata {
   success: boolean;
   pathArray: string[];
   issueFork?: string;
-  allHrefs: string[];
+  availablePatches: string[];
   issueBranches: string[];
   moduleVersion: string;
   loggedIn: boolean;
