@@ -70,7 +70,7 @@ export default defineComponent({
         DrupalPod
         <img class="logo" src="./assets/DrupalPod-128.png" alt="DrupalPod Logo" role="presentation">
       </h2>
-      <p v-if="!loaded && errors?.length > 0" class="reading-page-status">
+      <p v-if="!loaded && errors?.length === 0" class="reading-page-status">
         Please wait...
       </p>
     </header>
