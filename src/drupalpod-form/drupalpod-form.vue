@@ -27,9 +27,9 @@
 </style>
 
 <script lang="ts">
-import { defineComponent, PropType } from 'vue';
+import { defineComponent, inject, PropType } from 'vue';
 import { IssueMetadata } from '@/models/issue-metadata';
-import { getDrupalPodRepo, openDevEnv } from '../popup';
+import DrupalOrg from '@/services/drupal-org';
 
 export default defineComponent({
   props: {
@@ -46,6 +46,7 @@ export default defineComponent({
         installProfile: null,
         patch: null,
       },
+      drupal: inject('drupal') as DrupalOrg,
     };
   },
   methods: {
@@ -63,7 +64,7 @@ export default defineComponent({
         patch,
       } = this.formData;
 
-      openDevEnv(
+      this.drupal.openDevEnv(
         this.envRepo,
         projectName,
         issueFork,
@@ -75,17 +76,17 @@ export default defineComponent({
         installProfile,
       ).then(() => {
         window.close();
-      }).catch((error) => {
+      }).catch((error: Error | string) => {
         console.error(error);
       });
     },
   },
   mounted(): void {
-    getDrupalPodRepo()
-      .then((url) => {
+    this.drupal.getDrupalPodRepo()
+      .then((url: string) => {
         this.envRepo = url;
       })
-      .catch((err) => {
+      .catch((err: Error | string) => {
         console.error(err);
         this.envRepo = '';
       });
@@ -94,7 +95,11 @@ export default defineComponent({
 </script>
 
 <template>
-  <form id="form-selection" aria-live="polite" v-on:submit="open" aria-describedby="form-description">
+  <form
+    id="form-selection"
+    aria-live="polite"
+    aria-describedby="form-description"
+    v-on:submit="open">
     <aside>
       <ul class="item-list">
         <li class="list-item list-item--inline">
@@ -135,7 +140,10 @@ export default defineComponent({
     <div class="form-group">
       <label for="available-patches">Choose a patch:</label>
       <select name="available-patches" id="available-patches" v-model="formData.patch">
-        <option v-for="(option, index) in issueMetadata.availablePatches" :key="index" :value="option">
+        <option
+          v-for="(option, index) in issueMetadata.availablePatches"
+          :key="index"
+          :value="option">
           {{ option }}
         </option>
       </select>
