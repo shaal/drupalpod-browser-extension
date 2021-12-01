@@ -5,7 +5,7 @@
     "version": "1.0.4",
     "homepage_url": "https://www.drupalpod.com",
     "browser_action": {
-        "default_icon": "icons/DrupalPod-128x128.png",
+        "default_icon": "img/DrupalPod-128x128.png",
         "default_popup": "popup.html",
         "default_title": "DrupalPod"
     },
@@ -13,7 +13,7 @@
         "activeTab", "storage"
     ],
     "background": {
-        "scripts": ["scripts/background.js"],
+        "scripts": ["js/background.js"],
         "persistent": false
     },
     "options_ui": {
