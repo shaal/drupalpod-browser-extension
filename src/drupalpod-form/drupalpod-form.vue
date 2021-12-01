@@ -4,6 +4,7 @@
   flex-wrap: wrap;
   justify-content: flex-start;
   align-items: baseline;
+  margin: .25rem;
 }
 
 .form-description {
@@ -25,11 +26,15 @@
   justify-content: flex-start;
   align-items: baseline;
 }
+.select-control--wide {
+  width: 100%;
+}
 </style>
 
 <script lang="ts">
 import { defineComponent, inject, PropType } from 'vue';
 import { IssueMetadata } from '@/models/issue-metadata';
+import { KeyValuePair } from '@/models/key-value-pair';
 import DrupalOrg from '@/services/drupal-org';
 
 export default defineComponent({
@@ -65,21 +70,23 @@ export default defineComponent({
         patch,
       } = this.formData;
 
-      this.drupal.openDevEnv(
-        this.envRepo,
-        projectName,
-        issueFork,
-        issueBranch,
-        projectType,
-        moduleVersion,
-        coreVersion,
-        patch,
-        installProfile,
-      ).then(() => {
-        window.close();
-      }).catch((error: Error | string) => {
-        console.error(error);
-      });
+      const params: KeyValuePair<string>[] = [
+        { key: 'DP_PROJECT_NAME', value: projectName },
+        { key: 'DP_ISSUE_FORK', value: issueFork },
+        { key: 'DP_ISSUE_BRANCH', value: issueBranch },
+        { key: 'DP_PROJECT_TYPE', value: projectType },
+        { key: 'DP_MODULE_VERSION', value: moduleVersion },
+        { key: 'DP_CORE_VERSION', value: coreVersion },
+        { key: 'DP_PATCH_FILE', value: patch ? encodeURIComponent(patch) : '\'\'' },
+        { key: 'DP_INSTALL_PROFILE', value: installProfile === '(none)' ? '' : installProfile },
+      ];
+
+      this.drupal.openDevEnv(this.envRepo, params)
+        .then(() => {
+          window.close();
+        }).catch((error: Error | string) => {
+          console.error(error);
+        });
     },
   },
   mounted(): void {
@@ -124,7 +131,7 @@ export default defineComponent({
     <p id="form-description" class="form-description">Select from the options below:</p>
     <div class="form-group">
       <label for="issue-branch">Branch:</label>
-      <select name="issue-branch" id="issue-branch" v-model="formData.issueBranch">
+      <select name="issue-branch" id="issue-branch" class="select-control" v-model="formData.issueBranch">
         <option v-for="(option, index) in issueMetadata.issueBranches" :key="index" :value="option">
           {{ option }}
         </option>
@@ -132,7 +139,7 @@ export default defineComponent({
     </div>
     <div class="form-group">
       <label for="core-version">Drupal core version:</label>
-      <select name="core-version" id="core-version" v-model="formData.coreVersion">
+      <select name="core-version" id="core-version" class="select-control" v-model="formData.coreVersion">
         <option v-for="(option, index) in coreVersions" :key="index" :value="option">
           {{ option }}
         </option>
@@ -140,7 +147,7 @@ export default defineComponent({
     </div>
     <div class="form-group">
       <label for="available-patches">Choose a patch:</label>
-      <select name="available-patches" id="available-patches" v-model="formData.patch">
+      <select name="available-patches" id="available-patches" class="select-control select-control--wide" v-model="formData.patch">
         <option
           v-for="(option, index) in issueMetadata.availablePatches"
           :key="index"
@@ -151,7 +158,7 @@ export default defineComponent({
     </div>
     <div class="form-group">
       <label for="install-profile">Install profile:</label>
-      <select name="install-profile" id="install-profile" v-model="formData.installProfile">
+      <select name="install-profile" id="install-profile" class="select-control" v-model="formData.installProfile">
         <option v-for="(option, index) in installProfiles" :key="index" :value="option">
           {{ option }}
         </option>

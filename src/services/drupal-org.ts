@@ -1,4 +1,5 @@
 import { IssueMetadata } from '@/models/issue-metadata';
+import { KeyValuePair } from '@/models/key-value-pair';
 import { mockChrome, MockChrome } from '@/services/chrome';
 
 /**
@@ -25,16 +26,22 @@ export function getPageContent(params: any): IssueMetadata {
   }
   // Remove duplicate Hrefs.
   const patchesRegex = /^https:\/\/www\.drupal\.org\/files\/issues\/.*\.patch$/;
-  const patchesFound = duplicateAllHrefs.filter((item) => (patchesRegex.exec(item) !== null));
+  const patchesFound = duplicateAllHrefs
+    .filter((item) => (patchesRegex.exec(item) !== null))
+    .reduce((unique: string[], item: string) => (
+      !unique.includes(item) ? unique.concat(item) : unique
+    ), []);
 
   patchesFound.unshift('');
   const availablePatches = patchesFound;
 
   const issueBranches = [];
-  (Array.from(allBranches) as HTMLElement[]).forEach((element: HTMLElement) => {
-    issueBranches.push(element.dataset.branch);
-  });
-  issueBranches.unshift('');
+  if (allBranches) {
+    (Array.from(allBranches) as HTMLElement[]).forEach((element: HTMLElement) => {
+      issueBranches.push(element.dataset.branch);
+    });
+    issueBranches.unshift('');
+  }
 
   const versionEl = document.querySelector('.field-name-field-issue-version') as HTMLElement;
   const versionChildEl = versionEl?.children[1] as HTMLElement || null;
@@ -102,21 +109,10 @@ export default class DrupalOrg {
     });
   }
 
-  openDevEnv(
-    envRepo: string,
-    projectName: string,
-    issueFork: string,
-    issueBranch: string,
-    projectType: string,
-    moduleVersion: string,
-    coreVersion: string,
-    patchFile: string,
-    installProfile: string,
-  ): Promise<chrome.tabs.Tab> {
+  openDevEnv(envRepo: string, params: KeyValuePair<string>[]): Promise<chrome.tabs.Tab> {
     // Build URL structure to open Gitpod.
-    const profile = installProfile === '(none)' ? '\'\'' : installProfile;
-    const patch = patchFile === null ? '' : patchFile;
-    const url = `https://gitpod.io/#DP_PROJECT_NAME=${projectName},DP_ISSUE_FORK=${issueFork},DP_ISSUE_BRANCH=${issueBranch},DP_PROJECT_TYPE=${projectType},DP_MODULE_VERSION=${moduleVersion},DP_CORE_VERSION=${coreVersion},DP_PATCH_FILE=${patch},DP_INSTALL_PROFILE=${profile}/${envRepo}`;
+    const queryParams = params.map(({ key, value }) => `${key}=${value}`);
+    const url = `https://gitpod.io/#${queryParams.join(',')}/${envRepo}`;
     return this.chrome.tabs.create({ url });
   }
 
