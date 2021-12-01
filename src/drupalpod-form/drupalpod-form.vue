@@ -124,12 +124,12 @@ export default defineComponent({
         </li>
         <li class="list-item list-item--inline">
           <strong>Issue fork:</strong>
-          <span id="issue-fork">{{ issueMetadata.issueFork }}</span>
+          <span id="issue-fork">{{ issueMetadata.issueFork || 'None' }}</span>
         </li>
       </ul>
     </aside>
     <p id="form-description" class="form-description">Select from the options below:</p>
-    <div class="form-group">
+    <div class="form-group" v-if="issueMetadata.issueBranches?.length > 0">
       <label for="issue-branch">Branch:</label>
       <select name="issue-branch" id="issue-branch" class="select-control" v-model="formData.issueBranch">
         <option v-for="(option, index) in issueMetadata.issueBranches" :key="index" :value="option">
@@ -145,7 +145,7 @@ export default defineComponent({
         </option>
       </select>
     </div>
-    <div class="form-group">
+    <div class="form-group" v-if="issueMetadata.availablePatches?.length > 0">
       <label for="available-patches">Choose a patch:</label>
       <select name="available-patches" id="available-patches" class="select-control select-control--wide" v-model="formData.patch">
         <option
