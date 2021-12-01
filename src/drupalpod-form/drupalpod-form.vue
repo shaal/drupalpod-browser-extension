@@ -16,6 +16,7 @@
 
 .item-list {
   list-style: none;
+  padding-left: 0;;
 }
 .list-item--inline {
   width: 100%;

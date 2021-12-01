@@ -1,6 +1,7 @@
 export interface IssueMetadata {
   success: boolean;
-  pathArray: string[];
+  projectName: string;
+  projectType: string | null;
   issueFork?: string;
   availablePatches: string[];
   issueBranches: string[];
