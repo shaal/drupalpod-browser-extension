@@ -1,11 +1,11 @@
 module.exports = {
-  chainWebpack: config => {
+  chainWebpack: (config) => {
     config
       .plugin('html')
-      .tap(args => ([{
+      .tap((args) => ([{
         ...args[0],
         filename: 'popup.html',
         template: 'public/popup.html',
       }]));
-  }
-}
+  },
+};
