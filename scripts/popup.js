@@ -109,7 +109,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const moduleVersionStatus = document.getElementById('module-version');
         moduleVersionStatus.innerHTML = pageResults.moduleVersion;
 
-        const drupalCoreVersionsArray = ['9.4.0', '9.3.x', '9.4.x', '9.5.x', '10.0.x', '10.1.x'];
+        const drupalCoreVersionsArray = ['9.4.1', '9.3.x', '9.4.x', '9.5.x', '10.0.x', '10.1.x'];
         const drupalInstallProfiles = ['(none)', 'standard', 'demo_umami', 'minimal'];
         const availablePatchesArray = getPatchesFromLinks(pageResults.allHrefs);
 
