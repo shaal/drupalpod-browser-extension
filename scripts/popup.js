@@ -116,7 +116,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         populateSelectList('issue-branch', pageResults.issueBranches);
         populateSelectList('core-version', drupalCoreVersionsArray);
-        populateSelectList('install-profile', drupalInstallProfiles);
+        populateSelectList('install-profile', drupalInstallProfiles, 'standard');
         populateSelectList('available-patches', availablePatchesArray);
 
         // Display form
@@ -194,12 +194,15 @@ function displayWarning(className) {
     warningMessageElement.classList.remove('hidden');
 }
 
-function populateSelectList(id, options) {
+function populateSelectList(id, options, selected = false) {
     const select = document.getElementById(id);
 
     options.forEach(element => {
         const opt = document.createElement('option');
         opt.value = element;
+        if (selected && (element == selected)) {
+            opt.selected = 'selected';
+        }
         opt.innerHTML = element;
         select.appendChild(opt);
     });

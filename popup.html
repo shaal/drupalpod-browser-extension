@@ -1,13 +1,15 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-      <meta charset="UTF-8">
-      <meta http-equiv="X-UA-Compatible" content="IE=edge">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>DrupalPod</title>
-      <script src="scripts/popup.js"></script>
-      <link rel="stylesheet" type="text/css" href="css/popup.css">
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DrupalPod</title>
+  <script src="scripts/popup.js"></script>
+  <link rel="stylesheet" type="text/css" href="css/popup.css">
 </head>
+
 <body>
   <div class="container">
     <div class="page-header">
@@ -15,6 +17,14 @@
       <p class="reading-page-status">
         Please wait...
       </p>
+    </div>
+
+    <div class="hidden"><span>DrupalPod repo:</span> <span id="devdrupalpod"></span></div>
+    <div class="project-info">
+      <span>Project name:</span> <span id="project-name"></span>
+      <span>Project type:</span> <span id="project-type"></span>
+      <span>Module Version:</span> <span id="module-version"></span>
+      <span>Issue fork:</span> <span id="issue-fork"></span>
     </div>
 
     <div class="warnings" role="alert">
@@ -34,34 +44,25 @@
         Please log in to Drupal.org.
       </p>
     </div>
-    <hr>
-    <form class="form-selection hidden" id="form-selection" aria-live="polite">
-      <p class="hidden"><strong>DrupalPod repo: <span id="devdrupalpod"></span></strong></p>
-      <p><strong>Project name: <span id="project-name"></span></strong></p>
-      <p><strong>Project type: <span id="project-type"></span></strong></p>
-      <p><strong>Module Version: <span id="module-version"></span></strong></p>
-      <p class="hidden"><strong>Repo: <span id="drupalpod-repo"></span></strong></p>
-      <p><strong>Issue fork: <span id="issue-fork"></span></strong></p>
-      <p>Select from the options below:</p>
-      <label for="issue-branch">Branch:</label>
-      <select name="issue-branch" id="issue-branch">
-      </select>
-      <br>
+
+    <form class="form-selection hidden grid" id="form-selection" aria-live="polite">
       <label for="core-version">Drupal core version:</label>
       <select name="core-version" id="core-version">
       </select>
-      <br>
+      <label for="install-profile">Install profile:</label>
+      <select name="install-profile" id="install-profile">
+      </select>
+      <label for="issue-branch">Branch:</label>
+      <select name="issue-branch" id="issue-branch">
+      </select>
       <label for="available-patches">Choose a patch:</label>
       <select name="available-patches" id="available-patches">
       </select>
       <br>
-      <label for="install-profile">Install profile:</label>
-      <select name="install-profile" id="install-profile">
-      </select>
-      <br>
       <br>
       <button id="submit" type="submit"><h2>Open Dev Env</h2></button>
-    <form/>
+    </form>
   </div>
 </body>
+
 </html>

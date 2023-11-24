@@ -1,18 +1,121 @@
+:root {
+  --background-color: rgb(255, 255, 255);
+  --warning-background-color: #fff5f5;
+  --warning-text-color: rgb(197, 48, 48);
+  --focus-outline-color: rgb(199 210 254);
+  --box-shadow: 0 0 #0000,
+    0 0 #0000,
+    0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --border-color: rgb(209 213 219);
+  --button-background-color: rgb(66, 153, 225);
+  --button-border-color: rgb(43, 108, 176);
+  --button-text-color: rgb(255, 255, 255);
+  --button-hover-background-color: rgb(43, 108, 176);
+  --button-hover-text-color: rgb(247, 250, 252);
+}
+
 .container {
-  padding: 1em;
-  width: 25em;
-  height: 30em;
+  padding: 1rem;
+  width: 23rem;
 }
 
 .logo {
   float: right;
-  padding-left: 2em;
+  padding-left: 2rem;
+  margin-top: -1.5rem;
+}
+
+.project-info {
+  display: grid;
+  grid-template-columns: minmax(100px, auto) 1fr;
+  gap: 0.3rem;
+  margin: 1rem 0;
+  font-weight: bold;
+}
+
+.grid {
+  display: grid;
+  position: relative;
+  grid-template-columns: minmax(100px, auto) 1fr;
+  align-items: center;
+  gap: 0.3rem;
+  width: 100%;
+  margin: 1rem 0;
+}
+
+form .grid {
+  gap: 1rem;
 }
 
 p {
   margin: 0.3em 0;
 }
 
+.options {
+  padding: 1rem 0;
+}
+
+.option {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  width: 100%;
+  padding: .25rem 0;
+}
+
+.warnings {
+  margin: 0.25rem -1em;
+  padding: 0.25rem 1rem;
+  background-color: var(--warning-background-color);
+  color: var(--warning-text-color);
+}
+
+select {
+  width: 100%;
+  display: block;
+  margin-top: 0.25rem;
+  border-width: 1px;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  padding-right: 2.5rem;
+  padding-left: 0.75rem;
+  line-height: 1rem;
+  border-radius: 0.375rem;
+  background-image: url(data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e);
+  background-position: right 0.5rem center;
+  background-repeat: no-repeat;
+  background-size: 1.5em 1.5em;
+  padding-right: 2.5rem;
+  box-shadow: var(--box-shadow);
+  border-color: var(--border-color);
+}
+
+select:focus,
+button:focus {
+  outline-color: var(--focus-outline-color);
+}
+
+button {
+  border: 0 solid #e2e8f0;
+  margin-top: 1rem;
+  cursor: pointer;
+  background-color: var(--button-background-color);
+  border-color: var(--button-border-color);
+  border-radius: .25rem;
+  border-width: 1px;
+  padding: 1rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, .1), 0 1px 2px 0 rgba(0, 0, 0, .06);
+  color: var(--button-text-color);
+}
+
+button:hover {
+  background-color: var(--button-hover-background-color);
+}
+
+.grid button {
+  grid-column: 1 / span 2;
+}
+
 .hidden {
-  display: none;
+  display: none !important;
 }
