@@ -25,4 +25,4 @@ function setDrupalPodRepo(url) {
 }
 
 // set default
-setDrupalPodRepo('https://github.com/shaal/drupalpod');
+setDrupalPodRepo('https://git.drupalcode.org/project/drupalpod');

@@ -135,7 +135,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Build URL structure to open Gitpod
 
         const baseUrl = 'https://gitpod.io/#';
-        const envRepo = 'https://github.com/shaal/drupalpod';
+        const envRepo = 'https://git.drupalcode.org/project/drupalpod';
         const projectName = 'DP_PROJECT_NAME=' + document.getElementById('project-name').innerText;
         const issueFork = 'DP_ISSUE_FORK=' + (document.getElementById('issue-fork').innerText === 'false' ? '' : document.getElementById('issue-fork').innerText);
         const issueBranch = 'DP_ISSUE_BRANCH=' + encodeURIComponent(getSelectValue('issue-branch'));
