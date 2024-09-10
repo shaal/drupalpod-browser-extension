@@ -192,6 +192,10 @@ function displayWarning(className) {
     // Reveal error message
     const warningMessageElement = document.querySelector('.' + className);
     warningMessageElement.classList.remove('hidden');
+
+    // Also reveal "start from scratch" message on any warning.
+    const startFromScratchElement = document.querySelector('.start-from-scratch');
+    startFromScratchElement.classList.remove('hidden');
 }
 
 function populateSelectList(id, options) {
