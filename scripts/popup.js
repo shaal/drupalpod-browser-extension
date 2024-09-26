@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const pathArray = window.location.pathname.split('/');
 
             const issueFork = document.querySelector('.fork-link') ? document.querySelector('.fork-link').innerText : false;
-            const allBranches = document.querySelector('.branches') ? document.querySelector('.branches').children : false;
+            const allBranches = document.querySelectorAll('.branches [data-branch]');
 
             // Get links to find patches
             const allLinks = document.querySelectorAll('a');
