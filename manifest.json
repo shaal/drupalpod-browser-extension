@@ -23,7 +23,8 @@
         "https://*.gitpod.io/*"
     ],
     "background": {
-        "scripts": ["scripts/background.js"]
+        "scripts": ["scripts/background.js"],
+        "persistent": false
     },
     "content_scripts": [
         {
