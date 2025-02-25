@@ -3,6 +3,19 @@
  * This script handles the popup UI and manages interactions with Drupal.org issue pages
  */
 
+// Debugging utility - set to false for production
+const DEBUG = false;
+
+/**
+ * Conditionally logs messages based on debug setting
+ * @param {...any} args - Arguments to log
+ */
+function debugLog(...args) {
+    if (DEBUG) {
+        console.log(...args);
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     // Removed because we use only a specific main repo.
     // getDrupalPodRepo();
@@ -10,23 +23,43 @@ document.addEventListener('DOMContentLoaded', function() {
     // Check current URL to activate extension only on relevant pages
     chrome.tabs.query({active: true, currentWindow: true}, tabs => {
         const url = tabs[0].url;
+        debugLog('Current URL:', url);
         // use `url` here inside the callback because it's asynchronous!
-        checkURL(url);
+        checkURL(url).catch(error => {
+            console.error('Error in checkURL:', error);
+            displayWarning('something-went-wrong-instructions');
+            hideElement('.reading-page-status');
+        });
     });
 
     /**
      * Validates if the current URL is a Drupal issue page
      * @param {string} url - The URL to check
      */
-    function checkURL(url) {
+    async function checkURL(url) {
+        debugLog('Checking URL:', url);
+        
         // Run only on Drupal issues pages, otherwise display a message
         // Removed global flag from regex to avoid potential issues
         const projectIssuePageRegex = /(https:\/\/www.drupal.org\/project\/)\w+(\/issues\/)\d+/m;
 
         if (projectIssuePageRegex.test(url)) {
-            readIssueContent();
+            debugLog('URL matches Drupal issue page pattern');
+            
+            // Ensure we have permissions before proceeding
+            const hasPermissions = await ensurePermissions(url);
+            debugLog('Permission check result:', hasPermissions);
+            
+            if (hasPermissions) {
+                readIssueContent();
+            } else {
+                console.error('Failed to get required permissions');
+                displayWarning('something-went-wrong-instructions');
+                hideElement('.reading-page-status');
+            }
         }
         else {
+            debugLog('URL does not match Drupal issue page pattern');
             displayWarning('not-issue-page-instructions');
             hideElement('.reading-page-status');
         }
@@ -36,28 +69,149 @@ document.addEventListener('DOMContentLoaded', function() {
      * Executes content script to read issue information from the page
      */
     function readIssueContent() {
-        // Using chrome.scripting.executeScript instead of the deprecated chrome.tabs.executeScript
+        debugLog('Starting readIssueContent function');
+        
+        // Using chrome.tabs.query to get the current tab
         chrome.tabs.query({active: true, currentWindow: true}, async (tabs) => {
-            try {
-                const results = await chrome.scripting.executeScript({
-                    target: {tabId: tabs[0].id},
-                    func: inContentScript,
-                });
-                
-                hideElement('.reading-page-status');
-                
-                if (results && results[0] && results[0].result) {
-                    populateIssueFork(results[0].result);
-                } else {
-                    console.error('No results from content script');
-                    displayWarning('something-went-wrong-instructions');
-                }
-            } catch (error) {
-                console.error('Error executing content script:', error);
-                hideElement('.reading-page-status');
+            debugLog('Got tabs:', tabs);
+            
+            if (!tabs || tabs.length === 0) {
+                console.error('No active tabs found');
                 displayWarning('something-went-wrong-instructions');
+                hideElement('.reading-page-status');
+                return;
+            }
+
+            try {
+                // Try using messaging with the pre-injected content script first
+                debugLog('Trying to communicate with pre-injected content script');
+                
+                chrome.tabs.sendMessage(
+                    tabs[0].id, 
+                    {action: 'getPageInfo'}, 
+                    (response) => {
+                        debugLog('Received content script response:', response);
+                        
+                        if (chrome.runtime.lastError) {
+                            console.error('Error communicating with content script:', chrome.runtime.lastError);
+                            // Fall back to injection methods
+                            injectAndExecuteContentScript(tabs[0]);
+                            return;
+                        }
+                        
+                        if (response && response.success && response.data) {
+                            processContentScriptResults(response.data);
+                        } else {
+                            console.error('Invalid response from content script:', response);
+                            // Fall back to injection methods
+                            injectAndExecuteContentScript(tabs[0]);
+                        }
+                    }
+                );
+            } catch (error) {
+                console.error('Error in readIssueContent:', error);
+                console.error('Error stack:', error.stack);
+                injectAndExecuteContentScript(tabs[0]);
             }
         });
+    }
+
+    /**
+     * Fallback method to inject and execute content script
+     * @param {Object} tab - The browser tab to inject into
+     */
+    function injectAndExecuteContentScript(tab) {
+        debugLog('Falling back to script injection methods');
+        
+        try {
+            // Try Manifest V3 style first
+            if (typeof chrome.scripting !== 'undefined' && chrome.scripting.executeScript) {
+                debugLog('Using chrome.scripting.executeScript (Manifest V3 style)');
+                
+                chrome.scripting.executeScript({
+                    target: {tabId: tab.id},
+                    func: inContentScript,
+                })
+                .then(results => {
+                    debugLog('Content script executed successfully:', results);
+                    processContentScriptResults(results[0]?.result);
+                })
+                .catch(error => {
+                    console.error('Error with chrome.scripting.executeScript:', error);
+                    tryManifestV2Fallback(tab);
+                });
+                
+                return;
+            }
+            
+            tryManifestV2Fallback(tab);
+            
+        } catch (error) {
+            console.error('Error injecting content script:', error);
+            displayWarning('something-went-wrong-instructions');
+            hideElement('.reading-page-status');
+        }
+    }
+
+    /**
+     * Tries the Manifest V2 fallback method for content script execution
+     * This is for backward compatibility with older browsers and may be removed in the future
+     * @param {Object} tab - The browser tab to inject into
+     */
+    function tryManifestV2Fallback(tab) {
+        // Fallback to Manifest V2 style
+        debugLog('Fallback: Using chrome.tabs.executeScript (Manifest V2 style)');
+        
+        // Note: chrome.tabs.executeScript is deprecated in Manifest V3 but kept for compatibility
+        if (chrome.tabs.executeScript) {
+            chrome.tabs.executeScript(
+                tab.id,
+                {code: `(${inContentScript.toString()})();`},
+                (results) => {
+                    debugLog('chrome.tabs.executeScript results:', results);
+                    
+                    if (chrome.runtime.lastError) {
+                        console.error('Runtime error:', chrome.runtime.lastError);
+                        handleContentScriptError(chrome.runtime.lastError);
+                        return;
+                    }
+                    
+                    processContentScriptResults(results ? results[0] : null);
+                }
+            );
+            return;
+        }
+        
+        // If we reach here, neither method worked
+        console.error('No suitable method to inject content script found');
+        displayWarning('something-went-wrong-instructions');
+        hideElement('.reading-page-status');
+    }
+
+    /**
+     * Processes the results from the content script
+     * @param {Object} result - The result from the content script
+     */
+    function processContentScriptResults(result) {
+        debugLog('Processing content script results:', result);
+        hideElement('.reading-page-status');
+        
+        if (result && result.success) {
+            populateIssueFork(result);
+        } else {
+            console.error('Invalid result from content script:', result);
+            displayWarning('something-went-wrong-instructions');
+        }
+    }
+
+    /**
+     * Handles content script execution errors
+     * @param {Error} error - The error that occurred
+     */
+    function handleContentScriptError(error) {
+        console.error('Content script error:', error);
+        displayWarning('something-went-wrong-instructions');
+        hideElement('.reading-page-status');
     }
 
     /**
@@ -361,7 +515,7 @@ async function getProjectType(projectName) {
                 // If we have a cached result and it's not too old (24 hours)
                 if (result[cacheKey] && 
                     result[cacheKey].timestamp > Date.now() - 24 * 60 * 60 * 1000) {
-                    console.log('Using cached project type for:', projectName);
+                    debugLog('Using cached project type for:', projectName);
                     resolve(result[cacheKey].type);
                     return;
                 }
@@ -464,4 +618,40 @@ function getDrupalPodRepo() {
             drupalPodRepoStatus.textContent = response.message;
         }
     });
+}
+
+/**
+ * Checks and requests permissions if needed
+ * @param {string} url - The URL to request permissions for
+ * @returns {Promise<boolean>} - Whether permissions were granted
+ */
+async function ensurePermissions(url) {
+    debugLog('Checking permissions for:', url);
+    
+    try {
+        // First check if we already have the permissions
+        const hasPermission = await chrome.permissions.contains({
+            permissions: ['scripting'],
+            origins: [new URL(url).origin + '/*']
+        });
+        
+        debugLog('Already has permissions:', hasPermission);
+        
+        if (hasPermission) {
+            return true;
+        }
+        
+        // If not, request them
+        debugLog('Requesting permissions...');
+        const granted = await chrome.permissions.request({
+            permissions: ['scripting'],
+            origins: [new URL(url).origin + '/*']
+        });
+        
+        debugLog('Permissions granted:', granted);
+        return granted;
+    } catch (error) {
+        console.error('Error checking/requesting permissions:', error);
+        return false;
+    }
 }
