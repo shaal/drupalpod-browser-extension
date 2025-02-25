@@ -1,28 +1,36 @@
-chrome.runtime.onMessage.addListener((request, sender, sendResponse)=>{
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.message === 'fetch-drupalpod-repo') {
     (async function responding() {
-      sendResponse({message: await getDrupalPodRepo()});
+      const repo = await getDrupalPodRepo();
+      sendResponse({message: repo});
     })();
+    return true; // Required to use sendResponse asynchronously
   } else if (request.message === 'set-drupalpod-repo') {
     setDrupalPodRepo(request.url);
     sendResponse({message: 'great success'});
+    return true;
   }
-  return true;
 });
 
 async function getDrupalPodRepo() {
-  var p = new Promise((resolve, reject) => {
-    chrome.storage.sync.get(['drupalpod_repo'], (options)=>{
-      resolve(options.drupalpod_repo);
-    })
-  });
-
-  return await p;
+  try {
+    return new Promise((resolve) => {
+      chrome.storage.sync.get(['drupalpod_repo'], (options) => {
+        resolve(options.drupalpod_repo || 'https://git.drupalcode.org/project/drupalpod');
+      });
+    });
+  } catch (error) {
+    console.error('Error getting DrupalPod repo:', error);
+    return 'https://git.drupalcode.org/project/drupalpod';
+  }
 }
 
 function setDrupalPodRepo(url) {
-    chrome.storage.sync.set({'drupalpod_repo': url });
+  if (!url) return;
+  chrome.storage.sync.set({'drupalpod_repo': url});
 }
 
-// set default
-setDrupalPodRepo('https://git.drupalcode.org/project/drupalpod');
+// Set default when extension is installed
+chrome.runtime.onInstalled.addListener(() => {
+  setDrupalPodRepo('https://git.drupalcode.org/project/drupalpod');
+});
