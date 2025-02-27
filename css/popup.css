@@ -16,3 +16,32 @@ p {
 .hidden {
   display: none;
 }
+
+.loading {
+  opacity: 0.6;
+  position: relative;
+}
+
+.loading::after {
+  content: "";
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  right: -20px;
+  top: 50%;
+  margin-top: -8px;
+  border: 2px solid #ccc;
+  border-top-color: #333;
+  border-radius: 50%;
+  animation: loading-spinner 0.6s linear infinite;
+}
+
+@keyframes loading-spinner {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+button.loading {
+  cursor: wait;
+}
