@@ -37,7 +37,7 @@
     },
     "browser_specific_settings": {
         "gecko": {
-            "id": "drupalpod-helper@drupalpod.com",
+            "id": "{399fc09d-a670-4ac3-8355-28804d144c03}",
             "strict_min_version": "109.0"
         }
     }
